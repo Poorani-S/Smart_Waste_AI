@@ -1,0 +1,31 @@
+# Node modules
+node_modules/
+frontend/node_modules/
+
+# Python virtual environment and cache
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+backend/*.log
+
+# Build folders
+frontend/dist/
+frontend/build/
+
+# IDE/OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Data and models (if large)
+models/*.h5
+models/*.pt
+data/
