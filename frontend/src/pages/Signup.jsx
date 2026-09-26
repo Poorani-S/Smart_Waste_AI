@@ -20,7 +20,7 @@ const Signup = ({ onLoginSuccess }) => {
         role: 'User',
         joined: 'Just now'
       }));
-      // Notify App to update auth state → triggers re-render to home
+      sessionStorage.setItem('smartwaste_session', 'active');
       if (onLoginSuccess) onLoginSuccess();
     }, 1500);
   };

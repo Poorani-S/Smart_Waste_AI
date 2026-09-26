@@ -21,22 +21,11 @@ function App() {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Auth state — read from localStorage on mount
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // Check localStorage for existing session
-    const user = localStorage.getItem('smartwaste_user');
-    setIsLoggedIn(!!user);
-
-    // Listen for storage events (logout from other tabs, etc.)
-    const handleStorage = () => {
-      const u = localStorage.getItem('smartwaste_user');
-      setIsLoggedIn(!!u);
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
+  // Auth state — uses sessionStorage so every fresh browser open starts at /login
+  // sessionStorage is cleared automatically when the tab/browser is closed
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!sessionStorage.getItem('smartwaste_session')
+  );
 
   // Theme init
   useEffect(() => {
@@ -66,30 +55,34 @@ function App() {
 
   // Called after successful login/signup
   const handleLoginSuccess = () => {
+    sessionStorage.setItem('smartwaste_session', 'active');
     setIsLoggedIn(true);
   };
 
   // Called on logout
   const handleLogout = () => {
+    sessionStorage.removeItem('smartwaste_session');
     localStorage.removeItem('smartwaste_user');
     setIsLoggedIn(false);
   };
 
-  // If NOT logged in — show only login/signup pages (no sidebar, no navbar)
+  // ─── NOT LOGGED IN ─── Show only login/signup, no sidebar/navbar ───────────
   if (!isLoggedIn) {
     return (
       <Router>
-        <Routes>
-          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-          <Route path="/signup" element={<Signup onLoginSuccess={handleLoginSuccess} />} />
-          {/* Any other path → redirect to /login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+          <Routes>
+            <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+            <Route path="/signup" element={<Signup onLoginSuccess={handleLoginSuccess} />} />
+            {/* Every other path → /login */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </div>
       </Router>
     );
   }
 
-  // If logged in — show full app with sidebar + navbar
+  // ─── LOGGED IN ─── Full app with sidebar + navbar ──────────────────────────
   return (
     <Router>
       <div className="app-container">
@@ -119,7 +112,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
               <Route path="/notifications" element={<Notifications />} />
-              {/* Auth routes redirect to home when already logged in */}
+              {/* Auth routes → home when already logged in */}
               <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="/signup" element={<Navigate to="/" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
