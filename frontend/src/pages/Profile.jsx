@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Edit3, Save, X, Camera, Shield, Activity, Clock } from 'lucide-react';
+import axios from 'axios';
+
+const API_BASE = 'http://localhost:5000';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -8,6 +11,8 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [liveStats, setLiveStats] = useState({ total_predictions: 0, average_confidence: 0 });
+  const [sessionCount, setSessionCount] = useState(1);
   
   const [profile, setProfile] = useState({
     name: 'Admin User',
@@ -30,12 +35,49 @@ const Profile = () => {
         setDraft(updatedProfile);
       } catch (e) {}
     }
+
+    // Track real session count
+    const currentSessions = parseInt(localStorage.getItem('smartwaste_sessions') || '0', 10);
+    const sessionMarked = sessionStorage.getItem('smartwaste_session_marked');
+    let newSessionCount = currentSessions;
+    if (!sessionMarked) {
+      newSessionCount = currentSessions + 1;
+      localStorage.setItem('smartwaste_sessions', newSessionCount.toString());
+      sessionStorage.setItem('smartwaste_session_marked', 'true');
+    }
+    setSessionCount(newSessionCount || 1);
+
+    // Fetch real backend dashboard stats
+    axios.get(`${API_BASE}/api/dashboard/stats`)
+      .then(res => {
+        if (res.data) {
+          setLiveStats(res.data);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch real profile stats:", err);
+      });
   }, []);
 
   const stats = [
-    { label: 'Total Classifications', value: '1,284', icon: Activity, color: '#22c55e' },
-    { label: 'Accuracy Rate', value: '94.7%', icon: Shield, color: '#3b82f6' },
-    { label: 'Sessions', value: '47', icon: Clock, color: '#a855f7' },
+    { 
+      label: 'Total Classifications', 
+      value: (liveStats.total_predictions ?? 0).toLocaleString(), 
+      icon: Activity, 
+      color: '#22c55e' 
+    },
+    { 
+      label: 'Accuracy Rate', 
+      value: liveStats.average_confidence ? `${liveStats.average_confidence}%` : '0%', 
+      icon: Shield, 
+      color: '#3b82f6' 
+    },
+    { 
+      label: 'Sessions', 
+      value: sessionCount.toLocaleString(), 
+      icon: Clock, 
+      color: '#a855f7' 
+    },
   ];
 
   const handleSave = () => {
