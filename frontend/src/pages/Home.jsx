@@ -1,9 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Leaf, ShieldCheck, Zap } from 'lucide-react';
 import './Home.css';
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  const handleStartClassifying = () => {
+    const saved = localStorage.getItem('smartwaste_user');
+    if (saved) {
+      navigate('/classify');
+    } else {
+      navigate('/login');
+    }
+  };
+
   return (
     <div className="home-container animate-fade-in">
       <div className="hero-section">
@@ -13,9 +24,9 @@ const Home = () => {
         <p className="hero-subtitle">
           Powered by Explainable AI (EfficientNetB0 + Grad-CAM) to help you sort waste accurately and responsibly.
         </p>
-        <Link to="/classify" className="btn btn-primary hero-btn">
+        <button onClick={handleStartClassifying} className="btn btn-primary hero-btn" style={{ border: 'none', cursor: 'pointer' }}>
           Start Classifying <ArrowRight size={20} />
-        </Link>
+        </button>
       </div>
 
       <div className="features-grid">

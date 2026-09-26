@@ -17,6 +17,14 @@ import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 
+const ProtectedRoute = ({ children }) => {
+  const user = localStorage.getItem('smartwaste_user');
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 function App() {
   const [theme, setTheme] = useState('light');
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -68,16 +76,16 @@ function App() {
           <main className="main-content">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/classify" element={<Classify />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/models" element={<Models />} />
+              <Route path="/classify" element={<ProtectedRoute><Classify /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+              <Route path="/models" element={<ProtectedRoute><Models /></ProtectedRoute>} />
               <Route path="/waste-guide" element={<WasteGuide />} />
-              <Route path="/batch" element={<BatchAnalysis />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/batch" element={<ProtectedRoute><BatchAnalysis /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/about" element={<About />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="*" element={<Navigate to="/" replace />} />
