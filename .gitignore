@@ -29,3 +29,5 @@ frontend/build/
 models/*.h5
 models/*.pt
 data/
+
+Real-World Garbage-Waste Classification (5 Classes)/
