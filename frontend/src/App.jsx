@@ -25,6 +25,14 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+const PublicOnlyRoute = ({ children }) => {
+  const user = localStorage.getItem('smartwaste_user');
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
 function App() {
   const [theme, setTheme] = useState('light');
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -75,20 +83,20 @@ function App() {
           
           <main className="main-content">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+              <Route path="/signup" element={<PublicOnlyRoute><Signup /></PublicOnlyRoute>} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/classify" element={<ProtectedRoute><Classify /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
               <Route path="/models" element={<ProtectedRoute><Models /></ProtectedRoute>} />
-              <Route path="/waste-guide" element={<WasteGuide />} />
+              <Route path="/waste-guide" element={<ProtectedRoute><WasteGuide /></ProtectedRoute>} />
               <Route path="/batch" element={<ProtectedRoute><BatchAnalysis /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/about" element={<About />} />
+              <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           </main>
         </div>

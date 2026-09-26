@@ -33,12 +33,12 @@ const Signup = () => {
       justifyContent: 'center',
       padding: '2rem',
       background: 'var(--bg-primary)',
-      position: 'absolute',
+      position: 'fixed',
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
-      zIndex: 100
+      zIndex: 9999
     }}>
       <div className="glass-panel animate-fade-in" style={{
         width: '100%',
