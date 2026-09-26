@@ -31,13 +31,7 @@ const Login = () => {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem',
-      background: 'var(--bg-primary)',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 9999
+      background: 'var(--bg-primary)'
     }}>
       <div className="glass-panel animate-fade-in" style={{
         width: '100%',
