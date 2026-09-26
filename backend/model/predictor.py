@@ -5,17 +5,22 @@ import tensorflow as tf
 from keras.models import load_model
 from PIL import Image, ImageOps, ImageEnhance
 
-# Global Model Variable
+# Global Model Caching Variables
 _model = None
+_model_path = None
+_model_mtime = None
 
 CLASSES = ["Glass", "Metal", "Organic", "Paper", "Plastic"]  # Alphabetical order
 
 def load_active_model(model_path):
-    global _model
-    if _model is None:
+    global _model, _model_path, _model_mtime
+    current_mtime = os.path.getmtime(model_path) if os.path.exists(model_path) else 0
+    if _model is None or _model_path != model_path or _model_mtime != current_mtime:
         try:
-            print(f"Loading model from {model_path}...")
+            print(f"Loading/Reloading active model from {model_path}...")
             _model = load_model(model_path)
+            _model_path = model_path
+            _model_mtime = current_mtime
             print("Model loaded successfully.")
         except Exception as e:
             print(f"Error loading model: {e}")
@@ -31,23 +36,29 @@ def _pil_to_array(pil_img, normalize=False):
 
 def preprocess_and_augment(img_path):
     """
-    Returns a list of (img_array, weight) tuples for Test-Time Augmentation (TTA).
-    We try multiple preprocessing variants and return all of them to be averaged.
-    This significantly improves reliability when the training normalization is uncertain.
+    Returns a list of img_arrays for Test-Time Augmentation (TTA).
+    Preserves original aspect ratio via white-background padding.
     """
     img = Image.open(img_path).convert("RGB")
-    img = img.resize((224, 224), Image.LANCZOS)
+    w, h = img.size
+    if w != h:
+        max_dim = max(w, h)
+        padded = Image.new("RGB", (max_dim, max_dim), (255, 255, 255))
+        padded.paste(img, ((max_dim - w) // 2, (max_dim - h) // 2))
+        img = padded
+
+    img_resized = img.resize((224, 224), Image.LANCZOS)
 
     augmented = []
 
-    # Original
-    augmented.append(_pil_to_array(img, normalize=False))
+    # Original resized
+    augmented.append(_pil_to_array(img_resized, normalize=False))
     # Horizontal flip
-    augmented.append(_pil_to_array(ImageOps.mirror(img), normalize=False))
-    # Slight brightness boost (simulate different lighting)
-    augmented.append(_pil_to_array(ImageEnhance.Brightness(img).enhance(1.15), normalize=False))
-    # Slight brightness reduce
-    augmented.append(_pil_to_array(ImageEnhance.Brightness(img).enhance(0.85), normalize=False))
+    augmented.append(_pil_to_array(ImageOps.mirror(img_resized), normalize=False))
+    # Slight brightness boost
+    augmented.append(_pil_to_array(ImageEnhance.Brightness(img_resized).enhance(1.1), normalize=False))
+    # Slight contrast boost
+    augmented.append(_pil_to_array(ImageEnhance.Contrast(img_resized).enhance(1.1), normalize=False))
 
     return augmented
 

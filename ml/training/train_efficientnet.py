@@ -41,37 +41,36 @@ os.makedirs(REPORTS_DIR, exist_ok=True)
 
 # ─── Hyperparameters ────────────────────────────────────────────────────────
 IMG_SIZE   = (224, 224)
-BATCH_SIZE = 16   # Smaller batch = better generalization on small datasets
+BATCH_SIZE = 32   # Faster training and smooth gradients
 SEED       = 42
 
 # Phase 1 – frozen base (feature extraction warm-up)
-P1_EPOCHS  = 20
+P1_EPOCHS  = 12
 P1_LR      = 1e-3
 
 # Phase 2 – unfreeze top layers (fine-tuning)
-P2_EPOCHS  = 40
-P2_LR      = 1e-4
-UNFREEZE_LAYERS = 30   # Unfreeze last 30 layers of EfficientNetB0
+P2_EPOCHS  = 25
+P2_LR      = 2e-4
+UNFREEZE_LAYERS = 60   # Unfreeze top 60 layers of EfficientNetB0 for high accuracy
 
-DROPOUT    = 0.4
+DROPOUT    = 0.3
 L2_DECAY   = 1e-4
 NUM_CLASSES = 5
 
 
 # ─── Data Generators ────────────────────────────────────────────────────────
 def get_generators():
-    # Heavy augmentation for small dataset — helps prevent overfitting dramatically
+    # Realistic augmentation tailored for waste images
     train_datagen = ImageDataGenerator(
-        rotation_range=45,
-        width_shift_range=0.25,
-        height_shift_range=0.25,
-        shear_range=0.15,
-        zoom_range=0.25,
+        rotation_range=25,
+        width_shift_range=0.15,
+        height_shift_range=0.15,
+        shear_range=0.1,
+        zoom_range=0.15,
         horizontal_flip=True,
         vertical_flip=False,
-        brightness_range=[0.7, 1.3],
-        channel_shift_range=30.0,
-        fill_mode='reflect',
+        brightness_range=[0.85, 1.15],
+        fill_mode='nearest',
     )
 
     # No augmentation on validation (only rescale — but EfficientNet handles that internally)
