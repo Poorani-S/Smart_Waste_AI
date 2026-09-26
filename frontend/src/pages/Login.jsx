@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Leaf } from 'lucide-react';
 
-const Login = () => {
-  const navigate = useNavigate();
+const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +19,8 @@ const Login = () => {
         role: 'User',
         joined: 'Just now'
       }));
-      navigate('/');
+      // Notify App to update auth state → triggers re-render to home
+      if (onLoginSuccess) onLoginSuccess();
     }, 1500);
   };
 
