@@ -5,6 +5,33 @@ import tensorflow as tf
 from keras.models import load_model
 from PIL import Image, ImageOps, ImageEnhance
 
+# ---------------------------------------------------------------------------
+# Cross-version Keras compatibility shim
+# ---------------------------------------------------------------------------
+# The model was saved with Keras 3.13+ which added 'input_axes' / 'output_axes'
+# to VarianceScaling's serialized config. Older Keras (e.g. 3.12.x bundled with
+# TF 2.16.1) doesn't accept those kwargs, causing deserialization to crash.
+# We monkey-patch __init__ to silently drop any unrecognised keyword arguments
+# so the .h5 file loads correctly on any Keras 3.x version.
+def _patch_keras_compat():
+    try:
+        from keras.initializers import VarianceScaling
+        _orig = VarianceScaling.__init__
+        def _compat_init(self, scale=1.0, mode='fan_in',
+                         distribution='truncated_normal', seed=None, **kwargs):
+            # Drop kwargs added in newer Keras that older versions don't support
+            kwargs.pop('input_axes', None)
+            kwargs.pop('output_axes', None)
+            _orig(self, scale=scale, mode=mode,
+                  distribution=distribution, seed=seed)
+        VarianceScaling.__init__ = _compat_init
+        print("[compat] VarianceScaling patched for cross-version Keras compatibility.")
+    except Exception as e:
+        print(f"[compat] VarianceScaling patch skipped: {e}")
+
+_patch_keras_compat()
+# ---------------------------------------------------------------------------
+
 # Global Model Caching Variables
 _model = None
 _model_path = None
