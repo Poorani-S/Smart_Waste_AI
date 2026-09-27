@@ -111,3 +111,7 @@ def predict_image(img_path, model_path):
     }
 
     return result
+
+def get_model():
+    """Return the currently loaded model instance (or None if not yet loaded)."""
+    return _model

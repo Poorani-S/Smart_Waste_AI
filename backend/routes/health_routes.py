@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from database.mongodb import db
-from model.predictor import _model
+from model.predictor import get_model
 
 health_bp = Blueprint('health_bp', __name__)
 
@@ -8,6 +8,6 @@ health_bp = Blueprint('health_bp', __name__)
 def health_check():
     return jsonify({
         "status": "healthy",
-        "model_loaded": _model is not None,
+        "model_loaded": get_model() is not None,
         "database_connected": db.connected
     }), 200
