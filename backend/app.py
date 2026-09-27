@@ -3,7 +3,6 @@ from flask import Flask
 from flask_cors import CORS
 from config import Config
 from model.predictor import load_active_model
-import threading
 
 def create_app():
     app = Flask(__name__)
@@ -35,18 +34,19 @@ def create_app():
     app.register_blueprint(health_bp)
     app.register_blueprint(model_bp)
     
-    # Preload model in a background thread to not block startup completely,
-    # or load it directly if preferred.
-    def preload_model():
-        try:
-            if os.path.exists(Config.MODEL_PATH):
-                load_active_model(Config.MODEL_PATH)
-            else:
-                print(f"Warning: Model not found at {Config.MODEL_PATH}. Prediction endpoint will fail.")
-        except Exception as e:
-            print(f"Failed to preload model: {e}")
-            
-    threading.Thread(target=preload_model).start()
+    # Load model synchronously at startup so it's ready before serving requests.
+    # Background thread loading loses the race against health checks on cold starts.
+    model_path = os.path.normpath(Config.MODEL_PATH)
+    print(f"[startup] Resolved MODEL_PATH: {model_path}")
+    print(f"[startup] File exists: {os.path.exists(model_path)}")
+    try:
+        if os.path.exists(model_path):
+            load_active_model(model_path)
+            print("[startup] Model loaded successfully.")
+        else:
+            print(f"[startup] WARNING: Model not found at {model_path}. Prediction endpoint will fail.")
+    except Exception as e:
+        print(f"[startup] ERROR loading model: {e}")
     
     return app
 
