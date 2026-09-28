@@ -50,8 +50,10 @@ def create_app():
     
     return app
 
+# Module-level app instance — required by gunicorn ('gunicorn app:app')
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     port = int(os.getenv('PORT', 5000))          # Render injects $PORT
     debug = os.getenv('FLASK_ENV', 'production') == 'development'
     app.run(host='0.0.0.0', port=port, debug=debug)
