@@ -2,35 +2,42 @@ import os
 import time
 import numpy as np
 import tensorflow as tf
-from keras.models import load_model
-from PIL import Image, ImageOps, ImageEnhance
 
 # ---------------------------------------------------------------------------
-# Cross-version Keras compatibility shim
+# Cross-version Keras compatibility shim — must run BEFORE keras is imported
 # ---------------------------------------------------------------------------
 # The model was saved with Keras 3.13+ which added 'input_axes' / 'output_axes'
 # to VarianceScaling's serialized config. Older Keras (e.g. 3.12.x bundled with
 # TF 2.16.1) doesn't accept those kwargs, causing deserialization to crash.
-# We monkey-patch __init__ to silently drop any unrecognised keyword arguments
-# so the .h5 file loads correctly on any Keras 3.x version.
+# Strategy: patch VarianceScaling.__init__ AND register in custom_objects so
+# Keras's deserializer uses our compat version regardless of lookup path.
 def _patch_keras_compat():
     try:
+        import keras
         from keras.initializers import VarianceScaling
+
+        # 1) Monkey-patch __init__ on the class itself
         _orig = VarianceScaling.__init__
         def _compat_init(self, scale=1.0, mode='fan_in',
                          distribution='truncated_normal', seed=None, **kwargs):
-            # Drop kwargs added in newer Keras that older versions don't support
-            kwargs.pop('input_axes', None)
-            kwargs.pop('output_axes', None)
+            kwargs.pop('input_axes', None)   # added in Keras 3.13+
+            kwargs.pop('output_axes', None)  # added in Keras 3.13+
             _orig(self, scale=scale, mode=mode,
                   distribution=distribution, seed=seed)
         VarianceScaling.__init__ = _compat_init
+
+        # 2) Register in Keras custom objects so the deserializer finds it
+        keras.utils.get_custom_objects()['VarianceScaling'] = VarianceScaling
+
         print("[compat] VarianceScaling patched for cross-version Keras compatibility.")
     except Exception as e:
         print(f"[compat] VarianceScaling patch skipped: {e}")
 
 _patch_keras_compat()
 # ---------------------------------------------------------------------------
+
+from keras.models import load_model
+from PIL import Image, ImageOps, ImageEnhance
 
 # Global Model Caching Variables
 _model = None
