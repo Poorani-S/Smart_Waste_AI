@@ -1,6 +1,9 @@
 import os
 import time
 import numpy as np
+
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
+
 import tensorflow as tf
 
 # ---------------------------------------------------------------------------
@@ -8,33 +11,36 @@ import tensorflow as tf
 # ---------------------------------------------------------------------------
 # The model was saved with Keras 3.13+ which added 'input_axes' / 'output_axes'
 # to VarianceScaling's serialized config. Older Keras (e.g. 3.12.x bundled with
-# TF 2.16.1) doesn't accept those kwargs, causing deserialization to crash.
-# Strategy: patch VarianceScaling.__init__ AND register in custom_objects so
-# Keras's deserializer uses our compat version regardless of lookup path.
+# TF 2.16.x) doesn't accept those kwargs, causing deserialization to crash.
 def _patch_keras_compat():
     try:
         import keras
         from keras.initializers import VarianceScaling
 
-        # 1) Monkey-patch __init__ on the class itself
+        if getattr(VarianceScaling, "_smart_waste_compat_patched", False):
+            print("[compat] VarianceScaling patch already applied.")
+            return VarianceScaling
+
         _orig = VarianceScaling.__init__
+
         def _compat_init(self, scale=1.0, mode='fan_in',
                          distribution='truncated_normal', seed=None, **kwargs):
-            kwargs.pop('input_axes', None)   # added in Keras 3.13+
-            kwargs.pop('output_axes', None)  # added in Keras 3.13+
-            _orig(self, scale=scale, mode=mode,
-                  distribution=distribution, seed=seed)
+            kwargs.pop('input_axes', None)
+            kwargs.pop('output_axes', None)
+            return _orig(self, scale=scale, mode=mode,
+                         distribution=distribution, seed=seed, **kwargs)
+
         VarianceScaling.__init__ = _compat_init
-
-        # 2) Register in Keras custom objects so the deserializer finds it
+        VarianceScaling._smart_waste_compat_patched = True
         keras.utils.get_custom_objects()['VarianceScaling'] = VarianceScaling
-
         print("[compat] VarianceScaling patched for cross-version Keras compatibility.")
-    except Exception as e:
-        print(f"[compat] VarianceScaling patch skipped: {e}")
+        return VarianceScaling
+    except Exception as exc:
+        print(f"[compat] VarianceScaling patch skipped: {exc}")
+        return None
 
-_patch_keras_compat()
-# ---------------------------------------------------------------------------
+
+_variance_scaling_cls = _patch_keras_compat()
 
 from keras.models import load_model
 from PIL import Image, ImageOps, ImageEnhance
@@ -46,19 +52,53 @@ _model_mtime = None
 
 CLASSES = ["Glass", "Metal", "Organic", "Paper", "Plastic"]  # Alphabetical order
 
+
+def _resolve_model_path(model_path):
+    if model_path is None:
+        return None
+    candidate = os.path.expanduser(str(model_path))
+    if not os.path.isabs(candidate):
+        candidate = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', candidate))
+    return os.path.normpath(candidate)
+
+
+def _load_model_fallback(model_path):
+    print(f"[model] Attempting tf.keras load_model with compile=False for {model_path}")
+    try:
+        return tf.keras.models.load_model(model_path, compile=False)
+    except Exception as tf_error:
+        print(f"[model] tf.keras load_model failed: {type(tf_error).__name__}: {tf_error}")
+
+    if _variance_scaling_cls is not None:
+        print("[model] Fallback: loading with custom_objects={'VarianceScaling': compat_class}")
+        try:
+            return tf.keras.models.load_model(model_path, compile=False, custom_objects={'VarianceScaling': _variance_scaling_cls})
+        except Exception as compat_error:
+            print(f"[model] compat fallback failed: {type(compat_error).__name__}: {compat_error}")
+
+    try:
+        import keras
+        print(f"[model] Fallback: loading via legacy keras.models.load_model")
+        return keras.models.load_model(model_path, compile=False, custom_objects={'VarianceScaling': _variance_scaling_cls} if _variance_scaling_cls is not None else {})
+    except Exception as legacy_error:
+        print(f"[model] legacy Keras load_model failed: {type(legacy_error).__name__}: {legacy_error}")
+        raise legacy_error
+
+
 def load_active_model(model_path):
     global _model, _model_path, _model_mtime
-    current_mtime = os.path.getmtime(model_path) if os.path.exists(model_path) else 0
-    if _model is None or _model_path != model_path or _model_mtime != current_mtime:
+    resolved_model_path = _resolve_model_path(model_path)
+    current_mtime = os.path.getmtime(resolved_model_path) if os.path.exists(resolved_model_path) else 0
+    if _model is None or _model_path != resolved_model_path or _model_mtime != current_mtime:
         try:
-            print(f"Loading/Reloading active model from {model_path}...")
-            _model = load_model(model_path)
-            _model_path = model_path
+            print(f"[model] Loading/Reloading active model from {resolved_model_path}...")
+            _model = _load_model_fallback(resolved_model_path)
+            _model_path = resolved_model_path
             _model_mtime = current_mtime
-            print("Model loaded successfully.")
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            raise e
+            print("[model] Model loaded successfully.")
+        except Exception as exc:
+            print(f"[model] Error loading model: {type(exc).__name__}: {exc}")
+            raise
     return _model
 
 def _pil_to_array(pil_img, normalize=False):
