@@ -162,7 +162,7 @@ const BatchAnalysis = () => {
               <button
                 onClick={runBatch}
                 disabled={processing}
-                style={{ padding: '0.5rem 1.5rem', borderRadius: '2rem', border: 'none', background: 'var(--primary-color)', color: 'white', cursor: processing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, opacity: processing ? 0.7 : 1 }}
+                style={{ padding: '0.5rem 1.5rem', borderRadius: '2rem', border: 'none', background: 'var(--accent-green)', color: 'white', cursor: processing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, opacity: processing ? 0.7 : 1 }}
               >
                 {processing ? <><Loader2 size={16} className="spin" /> Processing… {progress}%</> : 'Run Batch Analysis'}
               </button>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Bell, Shield, Database, Lock, Clock } from 'lucide-react';
+import { Settings as SettingsIcon, Bell, Shield, Lock, Clock } from 'lucide-react';
 
 const Settings = () => {
   const [isSaving, setIsSaving] = useState(false);
@@ -29,26 +29,6 @@ const Settings = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', maxWidth: '800px' }}>
         
 
-
-        <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
-          <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.3rem' }}>
-            <Database size={20} color="var(--accent-green)" /> AI Model Settings
-          </h3>
-          <div style={{ marginTop: '1.5rem' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Active Model</label>
-              <select style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(150,150,150,0.3)', color: 'inherit' }}>
-                <option value="efficientnet" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>EfficientNet-B0 (Recommended)</option>
-                <option value="mobilenet" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>MobileNet-V2</option>
-              </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem' }}>Confidence Threshold: 75%</label>
-              <input type="range" min="50" max="99" defaultValue="75" style={{ width: '100%', accentColor: 'var(--accent-green)' }} />
-              <div style={{ opacity: 0.7, fontSize: '0.9rem', marginTop: '0.25rem' }}>Predictions below this threshold will be flagged for review</div>
-            </div>
-          </div>
-        </div>
 
         <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
           <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.3rem' }}>

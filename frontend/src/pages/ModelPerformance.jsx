@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, Activity, Cpu, CheckCircle, HardDrive, RefreshCw } from 'lucide-react';
+import { Layers, Activity, Cpu, CheckCircle, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
 const API_BASE = 'http://localhost:5000';
@@ -10,8 +10,8 @@ const StatCard = ({ icon: Icon, label, value, color }) => (
       <Icon size={24} />
     </div>
     <div>
-      <div style={{ fontSize: '1.75rem', fontWeight: 'bold', lineHeight: 1 }}>{value}</div>
-      <div style={{ opacity: 0.7, fontSize: '0.9rem', marginTop: '0.25rem' }}>{label}</div>
+      <div style={{ fontSize: '1.75rem', fontWeight: 'bold', lineHeight: 1, color: 'var(--text-primary)' }}>{value}</div>
+      <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.25rem' }}>{label}</div>
     </div>
   </div>
 );
@@ -111,47 +111,6 @@ const ModelPerformance = () => {
         </div>
       )}
 
-      {/* Model inventory */}
-      <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Installed Models</h3>
-        {models.length === 0 ? (
-          <div style={{ opacity: 0.6, textAlign: 'center', padding: '2rem' }}>No models found in /models directory.</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(150,150,150,0.2)' }}>
-                  {['Model', 'Architecture', 'File Size', 'Status'].map(h => (
-                    <th key={h} style={{ padding: '0.75rem 1rem', opacity: 0.7, fontWeight: 600, fontSize: '0.875rem' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {models.map((m, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(150,150,150,0.08)' }}>
-                    <td style={{ padding: '1rem', fontWeight: 600 }}>{m.name}</td>
-                    <td style={{ padding: '1rem', opacity: 0.8 }}>{m.architecture}</td>
-                    <td style={{ padding: '1rem', opacity: 0.8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <HardDrive size={14} /> {m.size_mb} MB
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem' }}>
-                      <span style={{
-                        padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 600,
-                        background: m.status === 'Active' ? 'rgba(16,185,129,0.15)' : 'rgba(150,150,150,0.15)',
-                        color: m.status === 'Active' ? '#10b981' : 'inherit'
-                      }}>
-                        {m.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

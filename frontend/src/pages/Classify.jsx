@@ -159,75 +159,95 @@ const Classify = () => {
     const top3Rows = (result.top_predictions || []).map(p =>
       `<tr><td>${p.category}</td><td>${p.confidence}%</td></tr>`
     ).join('');
+
+    const confColor = result.confidence_level === 'High' ? '#065f46' : result.confidence_level === 'Moderate' ? '#92400e' : '#991b1b';
+    const confBg = result.confidence_level === 'High' ? '#d1fae5' : result.confidence_level === 'Moderate' ? '#fef3c7' : '#fee2e2';
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SmartWaste AI Report — ${result.category}</title>
+  <title>SmartWaste_Report_${result.category}_${Date.now()}</title>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 700px; margin: 40px auto; color: #111; }
-    h1 { color: #10b981; }
-    .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-weight:700; font-size:0.9rem;
-             background: ${ result.confidence_level==='High' ? '#d1fae5' : result.confidence_level==='Moderate' ? '#fef3c7' : '#fee2e2' };
-             color: ${ result.confidence_level==='High' ? '#065f46' : result.confidence_level==='Moderate' ? '#92400e' : '#991b1b' }; }
-    table { border-collapse:collapse; width:100%; margin-top:12px; }
-    th { background:#f3f4f6; text-align:left; padding:8px 12px; }
-    td { padding:8px 12px; border-bottom:1px solid #e5e7eb; }
-    .section { margin:28px 0; padding:20px; border:1px solid #e5e7eb; border-radius:12px; }
-    .label { color:#6b7280; font-size:0.85rem; margin-bottom:4px; }
-    .value { font-size:1.1rem; font-weight:600; }
-    footer { margin-top:40px; font-size:0.8rem; color:#9ca3af; border-top:1px solid #e5e7eb; padding-top:16px; }
+    @media print { body { margin: 0; } .no-print { display: none !important; } }
+    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 720px; margin: 36px auto; color: #111; background: #fff; }
+    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+    .logo-box { width: 40px; height: 40px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+    h1 { color: #10b981; font-size: 1.6rem; margin: 0; }
+    .subtitle { color: #6b7280; font-size: 0.88rem; margin-bottom: 24px; margin-top: 4px; }
+    .divider { height: 1px; background: #e5e7eb; margin-bottom: 20px; }
+    .section { margin: 18px 0; padding: 18px 20px; border: 1px solid #e5e7eb; border-radius: 12px; }
+    .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin-bottom: 10px; }
+    .main-cat { font-size: 2.2rem; font-weight: 800; color: #10b981; }
+    .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; background: ${confBg}; color: ${confColor}; }
+    .conf-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 0.95rem; }
+    .bar-bg { flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: #10b981; width: ${result.confidence}%; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+    th { background: #f9fafb; text-align: left; padding: 8px 12px; font-weight: 600; color: #374151; width: 140px; border-bottom: 1px solid #e5e7eb; }
+    td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; }
+    tr:last-child td, tr:last-child th { border-bottom: none; }
+    footer { margin-top: 32px; font-size: 0.78rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 12px; display: flex; justify-content: space-between; }
+    .print-btn { display: block; margin: 24px auto 0; padding: 10px 28px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>🌿 SmartWaste AI — Classification Report</h1>
-  <p style="color:#6b7280;">Generated on: ${now}</p>
+  <div class="header">
+    <div class="logo-box">🌿</div>
+    <h1>SmartWaste AI</h1>
+  </div>
+  <div class="subtitle">Classification Report &nbsp;&middot;&nbsp; Generated: ${now}</div>
+  <div class="divider"></div>
 
   <div class="section">
-    <div class="label">Detected Category</div>
-    <div class="value" style="font-size:2rem; color:#10b981;">${result.category}</div>
-    <div style="margin-top:8px">
-      Confidence: <strong>${result.confidence}%</strong>
-      &nbsp;<span class="badge">${result.confidence_level} Confidence</span>
+    <div class="section-label">Detected Category</div>
+    <div class="main-cat">${result.category}</div>
+    <div class="conf-row">
+      <strong>${result.confidence}% confidence</strong>
+      <div class="bar-bg"><div class="bar-fill"></div></div>
+      <span class="badge">${result.confidence_level}</span>
     </div>
   </div>
 
   <div class="section">
-    <div class="label">Top 3 Predictions</div>
-    <table>
-      <tr><th>Category</th><th>Confidence</th></tr>
-      ${top3Rows}
-    </table>
+    <div class="section-label">Top 3 Predictions</div>
+    <table><tr><th>Category</th><th>Confidence</th></tr>${top3Rows}</table>
   </div>
 
   <div class="section">
-    <div class="label">Disposal Guide</div>
+    <div class="section-label">Disposal Guide</div>
     <table>
       <tr><th>Type</th><td>${result.waste_info?.type || '—'}</td></tr>
-      <tr><th>Examples</th><td>${(result.waste_info?.examples || []).join(', ')}</td></tr>
+      <tr><th>Examples</th><td>${(result.waste_info?.examples || []).join(', ') || '—'}</td></tr>
       <tr><th>Disposal</th><td>${result.waste_info?.disposal || '—'}</td></tr>
+      <tr><th>Recyclable</th><td>${result.waste_info?.recyclable ? 'Yes ✓' : 'No'}</td></tr>
     </table>
   </div>
 
   <div class="section">
-    <div class="label">Technical Details</div>
+    <div class="section-label">Technical Details</div>
     <table>
       <tr><th>Model</th><td>${result.model_name || 'EfficientNet-B0'}</td></tr>
       <tr><th>Processing Time</th><td>${result.processing_time}s</td></tr>
     </table>
   </div>
 
-  <footer>SmartWaste AI &mdash; Responsible AI for a Greener Tomorrow. Predictions are probabilistic. Always follow local guidelines.</footer>
+  <button class="print-btn no-print" onclick="window.print()">&#8595; Save as PDF</button>
+
+  <footer>
+    <span>SmartWaste AI &mdash; Responsible AI for a Greener Tomorrow</span>
+    <span>Predictions are probabilistic. Follow local guidelines.</span>
+  </footer>
+
+  <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); };<\/script>
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `SmartWaste_Report_${result.category}_${Date.now()}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const printWindow = window.open('', '_blank', 'width=800,height=900');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+    }
   };
 
   const getConfidenceColor = (level) => {
