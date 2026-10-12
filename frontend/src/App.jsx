@@ -15,6 +15,19 @@ import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import AdminPanel from './pages/AdminPanel';
+
+// Helper to read role from localStorage
+const getUserRole = () => {
+  try {
+    const saved = localStorage.getItem('smartwaste_user');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.role || 'User';
+    }
+  } catch (e) {}
+  return 'User';
+};
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -22,10 +35,10 @@ function App() {
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Auth state — uses sessionStorage so every fresh browser open starts at /login
-  // sessionStorage is cleared automatically when the tab/browser is closed
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => !!sessionStorage.getItem('smartwaste_session')
   );
+  const [userRole, setUserRole] = useState(() => getUserRole());
 
   // Theme init
   useEffect(() => {
@@ -57,6 +70,7 @@ function App() {
   const handleLoginSuccess = () => {
     sessionStorage.setItem('smartwaste_session', 'active');
     setIsLoggedIn(true);
+    setUserRole(getUserRole());
   };
 
   // Called on logout
@@ -64,6 +78,7 @@ function App() {
     sessionStorage.removeItem('smartwaste_session');
     localStorage.removeItem('smartwaste_user');
     setIsLoggedIn(false);
+    setUserRole('User');
   };
 
   // ─── NOT LOGGED IN ─── Show only login/signup, no sidebar/navbar ───────────
@@ -89,6 +104,7 @@ function App() {
         <Sidebar
           isCollapsed={isSidebarCollapsed}
           className={isMobileSidebarOpen ? 'mobile-open' : ''}
+          userRole={userRole}
         />
 
         <div className={`main-wrapper ${isSidebarCollapsed ? 'collapsed' : ''}`}>
@@ -97,6 +113,7 @@ function App() {
             toggleTheme={toggleTheme}
             toggleSidebar={toggleSidebar}
             onLogout={handleLogout}
+            userRole={userRole}
           />
 
           <main className="main-content">
@@ -112,6 +129,13 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/profile" element={<Profile onLogout={handleLogout} />} />
               <Route path="/notifications" element={<Notifications />} />
+
+              {/* Admin-only route — redirect non-admins to home */}
+              <Route
+                path="/admin"
+                element={userRole === 'Admin' ? <AdminPanel /> : <Navigate to="/" replace />}
+              />
+
               {/* Auth routes → home when already logged in */}
               <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="/signup" element={<Navigate to="/" replace />} />

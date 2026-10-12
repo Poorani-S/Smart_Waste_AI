@@ -2,11 +2,13 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   Leaf, Scan, LayoutDashboard, History, 
-  Settings, Info, Layers, Beaker, FileBox
+  Settings, Info, Layers, Beaker, FileBox, Shield
 } from 'lucide-react';
 import './Sidebar.css';
 
-const Sidebar = ({ isCollapsed }) => {
+const Sidebar = ({ isCollapsed, userRole }) => {
+  const isAdmin = userRole === 'Admin';
+
   return (
     <aside className={`sidebar glass-panel ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
@@ -67,6 +69,19 @@ const Sidebar = ({ isCollapsed }) => {
             </NavLink>
           </nav>
         </div>
+
+        {/* Admin-only section */}
+        {isAdmin && (
+          <div className="nav-group">
+            {!isCollapsed && <span className="nav-group-label" style={{ color: '#8b5cf6' }}>ADMIN</span>}
+            <nav className="sidebar-nav">
+              <NavLink to="/admin" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} title="Admin Panel">
+                <div className="nav-icon" style={{ color: '#8b5cf6' }}><Shield size={20} /></div>
+                {!isCollapsed && <span style={{ color: '#8b5cf6', fontWeight: 700 }}>Admin Panel</span>}
+              </NavLink>
+            </nav>
+          </div>
+        )}
 
         <div className="nav-group mt-auto">
           {!isCollapsed && <span className="nav-group-label">SYSTEM</span>}

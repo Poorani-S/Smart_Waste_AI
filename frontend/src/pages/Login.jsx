@@ -10,13 +10,15 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    // Mock login delay
     setTimeout(() => {
       setIsLoading(false);
+      // Determine role: admin if email starts with 'admin' or is the admin email
+      const isAdmin = email.toLowerCase().startsWith('admin') || email.toLowerCase().includes('admin@');
+      const role = isAdmin ? 'Admin' : 'User';
       localStorage.setItem('smartwaste_user', JSON.stringify({
-        name: email.split('@')[0],
+        name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
         email: email,
-        role: 'User',
+        role: role,
         joined: 'Just now'
       }));
       sessionStorage.setItem('smartwaste_session', 'active');
@@ -127,6 +129,10 @@ const Login = ({ onLoginSuccess }) => {
 
         <div style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.9rem', opacity: 0.8 }}>
           Don't have an account? <Link to="/signup" style={{ color: 'var(--accent-green)', textDecoration: 'none', fontWeight: 600 }}>Create one</Link>
+        </div>
+
+        <div style={{ marginTop: '1.25rem', padding: '0.75rem 1rem', background: 'rgba(16,185,129,0.08)', borderRadius: '0.75rem', border: '1px solid rgba(16,185,129,0.2)', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+          🛡 <strong style={{ color: 'var(--accent-green)' }}>Admin access:</strong> use an email starting with <code style={{ background: 'rgba(0,0,0,0.08)', padding: '1px 4px', borderRadius: '4px' }}>admin</code>
         </div>
       </div>
     </div>
