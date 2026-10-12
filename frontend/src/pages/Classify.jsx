@@ -5,6 +5,8 @@ import {
   ChevronRight, ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import LoadingAI from '../components/LoadingAI';
 import './Classify.css';
 
@@ -155,98 +157,101 @@ const Classify = () => {
 
   const downloadReport = () => {
     if (!result) return;
-    const now = new Date().toLocaleString();
-    const top3Rows = (result.top_predictions || []).map(p =>
-      `<tr><td>${p.category}</td><td>${p.confidence}%</td></tr>`
-    ).join('');
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    const confColor = result.confidence_level === 'High' ? '#065f46' : result.confidence_level === 'Moderate' ? '#92400e' : '#991b1b';
-    const confBg = result.confidence_level === 'High' ? '#d1fae5' : result.confidence_level === 'Moderate' ? '#fef3c7' : '#fee2e2';
+      // Emerald Header Banner
+      doc.setFillColor(16, 185, 129);
+      doc.rect(0, 0, 210, 22, 'F');
 
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>SmartWaste_Report_${result.category}_${Date.now()}</title>
-  <style>
-    @media print { body { margin: 0; } .no-print { display: none !important; } }
-    body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 720px; margin: 36px auto; color: #111; background: #fff; }
-    .header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
-    .logo-box { width: 40px; height: 40px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
-    h1 { color: #10b981; font-size: 1.6rem; margin: 0; }
-    .subtitle { color: #6b7280; font-size: 0.88rem; margin-bottom: 24px; margin-top: 4px; }
-    .divider { height: 1px; background: #e5e7eb; margin-bottom: 20px; }
-    .section { margin: 18px 0; padding: 18px 20px; border: 1px solid #e5e7eb; border-radius: 12px; }
-    .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #9ca3af; margin-bottom: 10px; }
-    .main-cat { font-size: 2.2rem; font-weight: 800; color: #10b981; }
-    .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; background: ${confBg}; color: ${confColor}; }
-    .conf-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 0.95rem; }
-    .bar-bg { flex: 1; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 4px; background: #10b981; width: ${result.confidence}%; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-    th { background: #f9fafb; text-align: left; padding: 8px 12px; font-weight: 600; color: #374151; width: 140px; border-bottom: 1px solid #e5e7eb; }
-    td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; }
-    tr:last-child td, tr:last-child th { border-bottom: none; }
-    footer { margin-top: 32px; font-size: 0.78rem; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 12px; display: flex; justify-content: space-between; }
-    .print-btn { display: block; margin: 24px auto 0; padding: 10px 28px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="logo-box">🌿</div>
-    <h1>SmartWaste AI</h1>
-  </div>
-  <div class="subtitle">Classification Report &nbsp;&middot;&nbsp; Generated: ${now}</div>
-  <div class="divider"></div>
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SmartWaste AI — Waste Classification Analysis', 14, 10);
 
-  <div class="section">
-    <div class="section-label">Detected Category</div>
-    <div class="main-cat">${result.category}</div>
-    <div class="conf-row">
-      <strong>${result.confidence}% confidence</strong>
-      <div class="bar-bg"><div class="bar-fill"></div></div>
-      <span class="badge">${result.confidence_level}</span>
-    </div>
-  </div>
+      doc.setFontSize(8.5);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Official Analysis | Generated: ${new Date().toLocaleString()}`, 14, 16);
 
-  <div class="section">
-    <div class="section-label">Top 3 Predictions</div>
-    <table><tr><th>Category</th><th>Confidence</th></tr>${top3Rows}</table>
-  </div>
+      // Material Detection Heading
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Detected Category: ${result.category.toUpperCase()}`, 14, 32);
 
-  <div class="section">
-    <div class="section-label">Disposal Guide</div>
-    <table>
-      <tr><th>Type</th><td>${result.waste_info?.type || '—'}</td></tr>
-      <tr><th>Examples</th><td>${(result.waste_info?.examples || []).join(', ') || '—'}</td></tr>
-      <tr><th>Disposal</th><td>${result.waste_info?.disposal || '—'}</td></tr>
-      <tr><th>Recyclable</th><td>${result.waste_info?.recyclable ? 'Yes ✓' : 'No'}</td></tr>
-    </table>
-  </div>
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Confidence: ${result.confidence}% (${result.confidence_level}) | Model: ${result.model_name || 'EfficientNet-B0'}`, 14, 38);
 
-  <div class="section">
-    <div class="section-label">Technical Details</div>
-    <table>
-      <tr><th>Model</th><td>${result.model_name || 'EfficientNet-B0'}</td></tr>
-      <tr><th>Processing Time</th><td>${result.processing_time}s</td></tr>
-    </table>
-  </div>
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.4);
+      doc.line(14, 42, 196, 42);
 
-  <button class="print-btn no-print" onclick="window.print()">&#8595; Save as PDF</button>
+      // Top 3 Predictions Table
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text('Model Probabilities & Alternative Candidates', 14, 50);
 
-  <footer>
-    <span>SmartWaste AI &mdash; Responsible AI for a Greener Tomorrow</span>
-    <span>Predictions are probabilistic. Follow local guidelines.</span>
-  </footer>
+      const topPredRows = (result.top_predictions || []).map((p, idx) => [
+        `#${idx + 1}`,
+        p.category,
+        `${p.confidence}%`,
+        idx === 0 ? 'Primary Match' : 'Alternative'
+      ]);
 
-  <script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); };<\/script>
-</body>
-</html>`;
+      autoTable(doc, {
+        startY: 54,
+        head: [['Rank', 'Waste Category', 'Confidence Score', 'Status']],
+        body: topPredRows.length > 0 ? topPredRows : [['#1', result.category, `${result.confidence}%`, 'Primary Match']],
+        headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 3.5 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+      });
 
-    const printWindow = window.open('', '_blank', 'width=800,height=900');
-    if (printWindow) {
-      printWindow.document.write(html);
-      printWindow.document.close();
+      // Disposal Recommendations Table
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(30, 41, 59);
+      doc.text('Disposal Recommendations & Material Information', 14, doc.lastAutoTable.finalY + 10);
+
+      const guideRows = [
+        ['Classification Category', result.category],
+        ['Material Type', result.waste_info?.type || 'Standard Municipal Waste'],
+        ['Common Examples', (result.waste_info?.examples || []).join(', ') || 'N/A'],
+        ['Recommended Disposal', result.waste_info?.disposal || 'Dispose according to local recycling guidelines.'],
+        ['Recyclable Stream', result.waste_info?.recyclable ? 'YES - Recyclable' : 'NO - Organic / General Waste'],
+        ['Processing Time', `${result.processing_time || 0.45} seconds`]
+      ];
+
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 14,
+        head: [['Parameter', 'Specification Details']],
+        body: guideRows,
+        headStyles: { fillColor: [13, 148, 136], textColor: [255, 255, 255], fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 3.5 },
+        columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' } },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+      });
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.4);
+        doc.line(14, 282, 196, 282);
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.setFont('helvetica', 'normal');
+        doc.text('SmartWaste AI — Computer Vision Waste Classification Report', 14, 288);
+        doc.text(`Page ${i} of ${pageCount}`, 196, 288, { align: 'right' });
+      }
+
+      doc.save(`SmartWaste_Report_${result.category}_${Date.now()}.pdf`);
+    } catch (err) {
+      console.error('Failed to generate PDF:', err);
     }
   };
 
