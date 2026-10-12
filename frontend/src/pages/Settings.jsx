@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Bell, Shield, Lock, Clock } from 'lucide-react';
 
-const Settings = () => {
+const Settings = ({ onLogout }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -79,6 +79,32 @@ const Settings = () => {
             </div>
           </div>
         </div>
+
+        {onLogout && (
+          <div className="glass-panel" style={{ padding: '2rem', borderRadius: '1rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <h3 style={{ marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.3rem', color: '#ef4444' }}>
+              <Shield size={20} /> Account & Session
+            </h3>
+            <p style={{ opacity: 0.8, fontSize: '0.95rem', margin: '0.5rem 0 1.25rem 0' }}>
+              Sign out of your active session on this device.
+            </p>
+            <button
+              onClick={onLogout}
+              style={{
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.75rem',
+                border: '1px solid rgba(239,68,68,0.4)',
+                background: 'rgba(239,68,68,0.1)',
+                color: '#ef4444',
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.95rem'
+              }}
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <button 

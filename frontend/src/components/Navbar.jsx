@@ -1,9 +1,9 @@
 import React from 'react';
-import { Bell, Sun, Moon, Settings, User } from 'lucide-react';
+import { Bell, Sun, Moon, Settings, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
-const Navbar = ({ theme, toggleTheme, toggleSidebar, userRole }) => {
+const Navbar = ({ theme, toggleTheme, toggleSidebar, userRole, onLogout }) => {
   const navigate = useNavigate();
 
   return (
@@ -24,24 +24,36 @@ const Navbar = ({ theme, toggleTheme, toggleSidebar, userRole }) => {
       </div>
 
       <div className="navbar-right">
-        <button className="nav-icon-btn" aria-label="Notifications" onClick={() => navigate('/notifications')}>
+        <button className="nav-icon-btn" aria-label="Notifications" onClick={() => navigate('/notifications')} title="Notifications">
           <Bell size={20} />
           <span className="notification-dot"></span>
         </button>
 
-        <button className="nav-icon-btn theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
+        <button className="nav-icon-btn theme-toggle" onClick={toggleTheme} aria-label="Toggle theme" title="Toggle theme">
           {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
-        <button className="nav-icon-btn" aria-label="Settings" onClick={() => navigate('/settings')}>
+        <button className="nav-icon-btn" aria-label="Settings" onClick={() => navigate('/settings')} title="Settings">
           <Settings size={20} />
         </button>
 
-        <div className="profile-menu" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
+        <div className="profile-menu" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }} title="Profile">
           <div className="profile-avatar">
             <User size={18} />
           </div>
         </div>
+
+        {onLogout && (
+          <button
+            className="nav-icon-btn"
+            aria-label="Sign Out"
+            onClick={onLogout}
+            title="Sign Out"
+            style={{ color: '#ef4444' }}
+          >
+            <LogOut size={19} />
+          </button>
+        )}
       </div>
     </header>
   );

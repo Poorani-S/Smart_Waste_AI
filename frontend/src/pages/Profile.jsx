@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const API_BASE = 'http://localhost:5000';
 
-const Profile = () => {
+const Profile = ({ onLogout }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [editing, setEditing] = useState(false);
@@ -88,10 +88,26 @@ const Profile = () => {
 
   const handlePasswordChange = (e) => {
     e.preventDefault();
-    if (newPassword) {
-      // Clear user to simulate logout, then navigate to login
-      localStorage.removeItem('smartwaste_user');
-      navigate('/login');
+    if (newPassword.trim()) {
+      setShowPasswordModal(false);
+      // Update saved user password if user exists
+      try {
+        const saved = localStorage.getItem('smartwaste_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          parsed.password = newPassword;
+          localStorage.setItem('smartwaste_user', JSON.stringify(parsed));
+        }
+      } catch (err) {}
+
+      // Trigger sign out
+      if (onLogout) {
+        onLogout();
+      } else {
+        sessionStorage.removeItem('smartwaste_session');
+        localStorage.removeItem('smartwaste_user');
+        navigate('/login');
+      }
     }
   };
 
@@ -246,8 +262,13 @@ const Profile = () => {
             </button>
             <button 
               onClick={() => {
-                localStorage.removeItem('smartwaste_user');
-                navigate('/login');
+                if (onLogout) {
+                  onLogout();
+                } else {
+                  sessionStorage.removeItem('smartwaste_session');
+                  localStorage.removeItem('smartwaste_user');
+                  navigate('/login');
+                }
               }}
               style={{ padding: '0.65rem 1.25rem', borderRadius: '0.5rem', border: '1px solid rgba(239,68,68,0.4)', background: 'rgba(239,68,68,0.08)', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}
             >
