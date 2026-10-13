@@ -27,7 +27,7 @@ const Classify = () => {
   // View state
   const [showGradCam, setShowGradCam] = useState(false);
 
-  const API_BASE = 'http://localhost:5000';
+  const API_BASE = 'https://smart-waste-ai-backend-w90n.onrender.com';
 
   // --- Drag and Drop Logic ---
   const [isDragging, setIsDragging] = useState(false);
@@ -129,9 +129,7 @@ const Classify = () => {
 
     try {
       // Small artificial delay to allow Loading animation to show stages
-      const response = await axios.post(`${API_BASE}/api/predict`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await axios.post(`${API_BASE}/api/predict`, formData);
       // Delay setting result slightly for UX effect if it returned too fast
       setTimeout(() => setResult(response.data), 1500);
     } catch (err) {
