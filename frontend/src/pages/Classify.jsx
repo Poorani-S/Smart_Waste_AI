@@ -27,7 +27,9 @@ const Classify = () => {
   // View state
   const [showGradCam, setShowGradCam] = useState(false);
 
-  const API_BASE = 'https://smart-waste-ai-backend-w90n.onrender.com';
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000'
+    : 'https://smart-waste-ai-backend-w90n.onrender.com';
 
   // --- Drag and Drop Logic ---
   const [isDragging, setIsDragging] = useState(false);
